@@ -89,8 +89,11 @@ class UpdateTest(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="FDH user's ") as directory:
             path = Path(directory) / "setup.exe"
             path.write_bytes(PAYLOAD)
+            def helper_started(*args, **kwargs):
+                (Path(directory) / "install-update.started").write_text("TEST_ONLY")
+                return MagicMock()
             with patch.object(updater, "can_install", return_value=True), \
-                 patch.object(updater.subprocess, "Popen") as process:
+                 patch.object(updater.subprocess, "Popen", side_effect=helper_started) as process:
                 updater.start_installer(path, directory)
             script = (Path(directory) / "install-update.ps1").read_text(encoding="utf-8-sig")
             self.assertIn("WaitForExit(120000)", script)
@@ -99,6 +102,29 @@ class UpdateTest(unittest.TestCase):
             self.assertIn("user''s", script)
             self.assertLess(script.index("ExitCode -ne 0"), script.index("Start-Process -FilePath $appExe"))
             self.assertIn("-File", process.call_args.args[0])
+            self.assertEqual(process.call_args.kwargs["env"]["PYINSTALLER_RESET_ENVIRONMENT"], "1")
+
+    def test_helper_startup_failure_keeps_app_from_exiting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "setup.exe"
+            path.write_bytes(PAYLOAD)
+            process = MagicMock()
+            process.poll.return_value = 1
+            with patch.object(updater, "can_install", return_value=True), \
+                 patch.object(updater.subprocess, "Popen", return_value=process):
+                with self.assertRaisesRegex(updater.UpdateError, "helper did not start"):
+                    updater.start_installer(path, directory)
+
+    def test_bundled_paths_are_not_inherited_by_system_helper(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = Path(directory) / "_internal"
+            import os
+            environment = {"PATH": os.pathsep.join((str(bundle), str(bundle / "bin"), str(Path(directory) / "system")))}
+            with patch.object(updater.sys, "_MEIPASS", str(bundle), create=True), \
+                 patch.dict(updater.os.environ, environment):
+                result = updater._external_environment()
+            self.assertEqual(result["PATH"], str(Path(directory) / "system"))
+            self.assertEqual(result["PYINSTALLER_RESET_ENVIRONMENT"], "1")
 
 
 class UpdateUITest(unittest.TestCase):

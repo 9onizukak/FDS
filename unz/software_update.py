@@ -4,6 +4,7 @@ Only public stable releases from the configured repository are accepted.
 The installer updates program files; runtime_paths keeps user data elsewhere.
 """
 from dataclasses import dataclass
+import ctypes
 import hashlib
 import json
 import os
@@ -12,6 +13,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -134,6 +136,19 @@ def _ps_literal(value):
     return "'" + str(value).replace("'", "''") + "'"
 
 
+def _external_environment():
+    """Prevent the installer/restarted app from reusing the old bundle state."""
+    environment = dict(os.environ)
+    environment["PYINSTALLER_RESET_ENVIRONMENT"] = "1"
+    bundle = getattr(sys, "_MEIPASS", None)
+    if bundle:
+        bundle = Path(bundle).resolve()
+        environment["PATH"] = os.pathsep.join(
+            part for part in environment.get("PATH", "").split(os.pathsep)
+            if part and not Path(part.strip('"')).resolve().is_relative_to(bundle))
+    return environment
+
+
 def start_installer(installer, directory):
     """Start a detached helper; caller exits only after successful handoff.
 
@@ -147,12 +162,16 @@ def start_installer(installer, directory):
     executable = Path(sys.executable).resolve()
     script = directory / "install-update.ps1"
     log = directory / "install-update.log"
+    started = directory / "install-update.started"
+    helper_log = directory / "install-helper.log"
+    started.unlink(missing_ok=True)
     script.write_text(f"""$ErrorActionPreference = 'Stop'
 $installer = {_ps_literal(installer)}
 $appExe = {_ps_literal(executable)}
 $appDir = {_ps_literal(executable.parent)}
 $log = {_ps_literal(log)}
 try {{
+    [System.IO.File]::WriteAllText({_ps_literal(started)}, [string]$PID)
     $oldProcess = Get-Process -Id {os.getpid()} -ErrorAction SilentlyContinue
     if ($oldProcess -and -not $oldProcess.WaitForExit(120000)) {{
         throw 'FDH did not close in time. Update cancelled.'
@@ -160,7 +179,7 @@ try {{
     $arguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/NOCLOSEAPPLICATIONS', '/NORESTARTAPPLICATIONS', ('/DIR="' + $appDir + '"'), ('/LOG="' + $log + '"'))
     $setup = Start-Process -FilePath $installer -ArgumentList $arguments -WindowStyle Hidden -Wait -PassThru
     if ($setup.ExitCode -ne 0) {{ throw ('Installer failed with exit code ' + $setup.ExitCode) }}
-    Remove-Item -LiteralPath $installer -Force
+    Remove-Item -LiteralPath $installer -Force -ErrorAction SilentlyContinue
     Start-Process -FilePath $appExe -WorkingDirectory $appDir
 }} catch {{
     $_.Exception.Message | Out-File -LiteralPath ($log + '.error') -Encoding utf8
@@ -169,10 +188,32 @@ try {{
 }}
 """, encoding="utf-8-sig")
     powershell = Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32/WindowsPowerShell/v1.0/powershell.exe"
+    # PyInstaller changes the Windows DLL search path. External system programs
+    # must inherit the system search path rather than bundled application DLLs.
+    dll_directory = ctypes.windll.kernel32.SetDllDirectoryW
+    dll_directory.argtypes = [ctypes.c_wchar_p]
+    dll_directory.restype = ctypes.c_int
+    bundle = getattr(sys, "_MEIPASS", None)
     try:
-        subprocess.Popen([str(powershell), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
-                          "-WindowStyle", "Hidden", "-File", str(script)],
-                         creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
-                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if not dll_directory(None):
+            raise OSError("Cannot reset the Windows DLL search path")
+        try:
+            with helper_log.open("wb") as output:
+                process = subprocess.Popen([str(powershell), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+                                            "-WindowStyle", "Hidden", "-File", str(script)],
+                                           creationflags=subprocess.CREATE_NO_WINDOW,
+                                           env=_external_environment(), cwd=directory,
+                                           stdin=subprocess.DEVNULL, stdout=output, stderr=subprocess.STDOUT)
+        finally:
+            if bundle:
+                dll_directory(str(bundle))
+        # Keep the app open if PowerShell fails before reaching the wait-for-exit
+        # step. This also retains useful startup diagnostics instead of discarding
+        # the helper's output and silently losing the update.
+        deadline = time.monotonic() + 10
+        while not started.exists():
+            if process.poll() is not None or time.monotonic() >= deadline:
+                raise UpdateError(f"Update helper did not start; see {helper_log}")
+            time.sleep(0.05)
     except OSError as error:
         raise UpdateError(f"Cannot start update installer: {error}") from error

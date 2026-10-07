@@ -59,6 +59,22 @@ build locally and attach the exact matching installer to a stable GitHub Release
 Existing 1.0.3 installations need a one-time manual installation of 1.0.4 to gain
 the updater.
 
+## Update integration test
+
+Run `.\.build-venv\Scripts\python.exe tests/run_update_integration.py` on Windows
+with Inno Setup available. This opt-in test builds isolated 1.0.4 and 1.0.5 app
+fixtures using the real GUI and updater, simulates only GitHub HTTP responses,
+and runs an actual Inno installer and automatic process restart. It verifies
+version display, resource replacement, active-job deferral, data preservation,
+and that the updated app does not reinstall the same version. All test data and
+logs stay under `.update-test`; the fixture installer creates no shortcuts or
+uninstall registration. No release is published by the test.
+
+The packaged updater clears the bundled Windows DLL search path before launching
+PowerShell, resets PyInstaller environment state for the restarted app, and waits
+for a helper startup marker before closing FDH. Helper startup diagnostics are
+saved in `updates/install-helper.log`.
+
 The build includes `.env.example` with hospital connection defaults and blank password fields. Existing `.env`, visit payloads, and patient history are excluded. Installed and portable apps store configuration and history in `%LOCALAPPDATA%\FDH`. New configuration variables are added on startup without replacing existing values. Uninstall leaves this directory available for reinstall.
 
 The package is unsigned. Offline API routing, token URL, configuration persistence, history separation, search responsiveness, and UI startup checks were performed; live hospital database and FDH submission were not exercised during packaging.

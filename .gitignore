@@ -14,6 +14,7 @@ err.txt
 
 # Build environments and generated packages
 .build-venv/
+.update-test/
 .venv/
 venv/
 build/
