@@ -29,11 +29,11 @@ Name: "desktopicon"; Description: "Create a desktop shortcut"; GroupDescription:
 
 [Files]
 Source: "..\dist\FDH\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "..\release\README-TH.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\FDH"; Filename: "{app}\FDH.exe"; WorkingDir: "{app}"
 Name: "{group}\FDH - Instructions"; Filename: "{app}\README-TH.txt"
+Name: "{group}\FDH - Version history"; Filename: "{sys}\notepad.exe"; Parameters: """{app}\CHANGELOG.md"""
 Name: "{autodesktop}\FDH"; Filename: "{app}\FDH.exe"; WorkingDir: "{app}"; Tasks: desktopicon
 
 [Run]

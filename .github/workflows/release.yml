@@ -40,4 +40,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $version = .\.build-venv\Scripts\python.exe -c "import sys; sys.path.insert(0, 'unz'); from app_version import APP_VERSION; print(APP_VERSION)"
-          gh release create "v$version" "release/FDH-Setup-$version.exe" "release/FDH-Portable-$version.zip" "release/SHA256SUMS-$version.txt" --verify-tag --title "FDH $version" --generate-notes --latest
+          gh release create "v$version" "release/FDH-Setup-$version.exe" "release/FDH-Portable-$version.zip" "release/SHA256SUMS-$version.txt" CHANGELOG.md --verify-tag --title "FDH $version" --notes-file "release/RELEASE-NOTES-$version.md" --latest

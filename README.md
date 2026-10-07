@@ -21,6 +21,7 @@ Do not commit credentials, patient payloads, visit data, or send history.
 ## Build and update
 
 See [Windows build and release instructions](installer/BUILD.md).
+See [version history](CHANGELOG.md) for changes by application version.
 Application version: **1.0.5**. Packaged Windows apps check for stable releases at
 startup and hourly, verify the installer download, wait for active jobs to finish,
 and preserve configuration and history when updating.

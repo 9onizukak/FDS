@@ -19,6 +19,9 @@ The application version lives in `unz/app_version.py`. Outputs for 1.0.5:
 `dist\FDH\FDH.exe`, `release\FDH-Setup-1.0.5.exe`,
 `release\FDH-Portable-1.0.5.zip`, and `release\SHA256SUMS-1.0.5.txt`.
 The build passes that same version to Inno Setup and uses it for package names.
+Both packages include `CHANGELOG.md`. The installer adds a version history
+shortcut to the Start Menu. The build also generates
+`release/RELEASE-NOTES-1.0.5.md` from the matching changelog entry.
 
 ## GitHub releases and automatic updates
 
@@ -47,13 +50,16 @@ be writable by the current user.
 
 To publish the next version:
 
-1. Change `APP_VERSION` in `unz/app_version.py`, for example to `1.0.5`.
-2. Update the version shown in `release/README-TH.txt`.
+1. Change `APP_VERSION` in `unz/app_version.py`, for example to `1.0.6`.
+2. Update the version shown in `release/README-TH.txt` and add a matching
+   `## [1.0.6]` entry to `CHANGELOG.md`, moving the relevant Unreleased changes
+   into that version entry.
 3. Commit and push the source and `.github/workflows/release.yml` to `9onizukak/FDS`.
-4. Push a matching tag, for example `git tag v1.0.5` then `git push origin v1.0.5`.
+4. Push a matching tag, for example `git tag v1.0.6` then `git push origin v1.0.6`.
 
 The workflow tests, builds, and publishes the installer, portable archive, and
-checksums. A source commit alone does not trigger an executable update. If a
+checksums, and changelog. Release descriptions use the matching changelog entry.
+A source commit alone does not trigger an executable update. If a
 workflow build fails, fix the build before publishing the release. Alternatively,
 build locally and attach the exact matching installer to a stable GitHub Release.
 Existing 1.0.3 installations need a one-time manual installation of 1.0.4 to gain

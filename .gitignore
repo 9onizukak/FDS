@@ -25,6 +25,7 @@ __pycache__/
 *.exe
 *.zip
 SHA256SUMS*.txt
+RELEASE-NOTES-*.md
 
 # Local tool configuration
 .codex/
