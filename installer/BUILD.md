@@ -15,9 +15,9 @@ Install Inno Setup's compiler in `build-tools\InnoSetup`, then run:
 .\build-windows.ps1
 ```
 
-The application version lives in `unz/app_version.py`. Outputs for 1.0.4:
-`dist\FDH\FDH.exe`, `release\FDH-Setup-1.0.4.exe`,
-`release\FDH-Portable-1.0.4.zip`, and `release\SHA256SUMS-1.0.4.txt`.
+The application version lives in `unz/app_version.py`. Outputs for 1.0.5:
+`dist\FDH\FDH.exe`, `release\FDH-Setup-1.0.5.exe`,
+`release\FDH-Portable-1.0.5.zip`, and `release\SHA256SUMS-1.0.5.txt`.
 The build passes that same version to Inno Setup and uses it for package names.
 
 ## GitHub releases and automatic updates

@@ -1,6 +1,6 @@
-FDH 1.0.4 — Windows 64-bit
+FDH 1.0.5 — Windows 64-bit
 
-ติดตั้งด้วย FDH-Setup-1.0.4.exe จากนั้นเปิด FDH จาก Start Menu
+ติดตั้งด้วย FDH-Setup-1.0.5.exe จากนั้นเปิด FDH จาก Start Menu
 ไม่ต้องติดตั้ง Python และไม่ต้องใช้สิทธิ Administrator
 
 การตั้งค่าครั้งแรก
@@ -26,7 +26,7 @@ Production ใช้ URL ตามเอกสารเป็นค่าตั�
 อัปเดตและถอนการติดตั้งจะเก็บไฟล์ตั้งค่าและประวัติไว้
 เมื่ออัปเดต โปรแกรมเพิ่มตัวแปรที่ยังไม่มี โดยไม่เปลี่ยนค่าที่เคยตั้งไว้
 
-แบบ Portable: แตก FDH-Portable-1.0.4.zip แล้วเปิด FDH\FDH.exe
+แบบ Portable: แตก FDH-Portable-1.0.5.zip แล้วเปิด FDH\FDH.exe
 ต้องเก็บโฟลเดอร์ _internal ไว้ด้วย ใช้ไฟล์ตั้งค่าตำแหน่งเดียวกับรุ่นติดตั้ง
 
 ตราสาธารณสุข: https://cco.moph.go.th/cco24/logo.html

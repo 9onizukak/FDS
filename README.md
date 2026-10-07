@@ -21,11 +21,11 @@ Do not commit credentials, patient payloads, visit data, or send history.
 ## Build and update
 
 See [Windows build and release instructions](installer/BUILD.md).
-Application version: **1.0.4**. Packaged Windows apps check for stable releases at
+Application version: **1.0.5**. Packaged Windows apps check for stable releases at
 startup and hourly, verify the installer download, wait for active jobs to finish,
 and preserve configuration and history when updating.
 
-The release workflow runs on a matching version tag such as `v1.0.4` and publishes
+The release workflow runs on a matching version tag such as `v1.0.5` and publishes
 Windows installer and portable packages. Pushing source alone does not publish
 a release. Source checkouts check updates manually and do not install executable
 updates.
