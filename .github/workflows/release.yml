@@ -1,0 +1,43 @@
+name: Windows release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Validate release tag
+        shell: pwsh
+        run: |
+          $version = python -c "import sys; sys.path.insert(0, 'unz'); from app_version import APP_VERSION; print(APP_VERSION)"
+          if ($env:GITHUB_REF -ne "refs/tags/v$version") { throw "Run this workflow on tag v$version" }
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m venv .build-venv
+          .\.build-venv\Scripts\python.exe -m pip install -r requirements-build.txt
+      - name: Offline tests
+        shell: pwsh
+        run: |
+          Copy-Item unz/.env.example unz/.env
+          .\.build-venv\Scripts\python.exe -m unittest discover -s tests -v
+      - name: Build Windows packages
+        shell: pwsh
+        run: .\build-windows.ps1
+      - name: Publish release packages
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = .\.build-venv\Scripts\python.exe -c "import sys; sys.path.insert(0, 'unz'); from app_version import APP_VERSION; print(APP_VERSION)"
+          gh release create "v$version" "release/FDH-Setup-$version.exe" "release/FDH-Portable-$version.zip" "release/SHA256SUMS-$version.txt" --verify-tag --title "FDH $version" --generate-notes --latest

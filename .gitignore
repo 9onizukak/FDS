@@ -1,0 +1,32 @@
+# Local credentials and hospital data
+.env
+.env.*
+!.env.example
+payload.json
+visit_raw.json
+send_history.jsonl
+*.jsonl
+*.log
+*.log.error
+update-settings.json
+install-update.ps1
+err.txt
+
+# Build environments and generated packages
+.build-venv/
+.venv/
+venv/
+build/
+dist/
+build-tools/
+__pycache__/
+*.pyc
+*.exe
+*.zip
+SHA256SUMS*.txt
+
+# Local tool configuration
+.codex/
+.agents/
+.aws/
+doc_review_render/
